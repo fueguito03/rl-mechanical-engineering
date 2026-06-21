@@ -1770,3 +1770,441 @@ Q-Learning의 핵심 개념 이해
 - Q-Table Structure
 
 구현 전 개념 학습 완료
+
+# Project 09 - Q-Learning
+
+## 목표
+
+Reward를 단순히 기록하는 것이 아니라 실제 행동(Action)에 영향을 주도록 만드는 첫 번째 강화학습 알고리즘 구현.
+
+---
+
+## 학습한 개념
+
+### State
+
+현재 환경의 상태.
+
+CarEnv에서는
+
+* x (위치)
+* v (속도)
+
+로 구성된다.
+
+```python
+state = [x, v]
+```
+
+---
+
+### Action
+
+에이전트가 선택하는 행동.
+
+```python
+actions = [-1, 0, 1]
+```
+
+* -1 : 브레이크
+* 0 : 유지
+* 1 : 가속
+
+---
+
+### Reward
+
+행동 결과에 대한 채점.
+
+Reward B 사용.
+
+```text
+목표와 가까워지면 +1
+목표에서 멀어지면 -1
+```
+
+---
+
+### Q(s,a)
+
+상태 s에서 행동 a를 했을 때의 가치.
+
+정확히는
+
+```text
+현재 보상 + 미래 보상
+```
+
+까지 포함한 기대 가치.
+
+---
+
+### V(s)
+
+상태 자체의 가치.
+
+최적 정책에서는
+
+V(s) = max_a Q(s,a)
+
+즉,
+
+"이 상태에 도착했을 때 가장 좋은 행동을 하면 얼마나 좋은가?"
+
+를 의미한다.
+
+---
+
+### Bellman Equation
+
+Q-Learning의 핵심.
+
+```text
+Q(s,a)
+
+=
+
+reward
+
++
+
+gamma * max_a' Q(s',a')
+```
+
+현재 행동의 가치는
+
+* 지금 받은 보상
+* 다음 상태의 미래 가치
+
+를 합친 값으로 정의된다.
+
+---
+
+### Bellman Error
+
+현재 추정값과 정답(Target)의 차이.
+
+```text
+error
+
+=
+
+target
+
+-
+
+Q(s,a)
+```
+
+---
+
+### Learning Rate (alpha)
+
+Q값을 얼마나 빠르게 수정할지 결정.
+
+```python
+alpha = 0.1
+```
+
+---
+
+### Discount Factor (gamma)
+
+미래 보상의 중요도.
+
+```python
+gamma = 0.95
+```
+
+gamma가 클수록 미래를 중요하게 생각한다.
+
+---
+
+### Exploration vs Exploitation
+
+Exploration
+
+```text
+새로운 행동 시도
+```
+
+Exploitation
+
+```text
+현재 가장 좋은 행동 선택
+```
+
+---
+
+### Epsilon-Greedy
+
+```python
+epsilon = 0.1
+```
+
+90%
+
+```text
+현재 최선 행동
+```
+
+10%
+
+```text
+랜덤 행동
+```
+
+---
+
+## State Discretization
+
+연속 상태를 Q-Table에 저장하기 위해 사용.
+
+```python
+def discretize_state(state):
+    x_bin = int(state[0])
+    v_bin = int(state[1])
+
+    return (x_bin, v_bin)
+```
+
+예시
+
+```text
+(3.42, 1.89)
+
+↓
+
+(3, 1)
+```
+
+---
+
+## Q-Table
+
+Dictionary 기반 구현.
+
+```python
+Q = {}
+```
+
+구조
+
+```python
+Q[(3,1)] = [2.0, 5.0, 1.0]
+```
+
+의미
+
+```text
+action = -1 → 2.0
+action =  0 → 5.0
+action =  1 → 1.0
+```
+
+---
+
+## 구현한 함수
+
+### discretize_state()
+
+상태를 bin으로 변환.
+
+### get_q_values()
+
+새 상태 등장 시
+
+```python
+[0.0, 0.0, 0.0]
+```
+
+초기화.
+
+### select_action()
+
+Epsilon-Greedy 정책.
+
+### update_q()
+
+Bellman Update 수행.
+
+```python
+q_values[action_idx] += alpha * (
+    reward
+    + gamma * max(next_q_values)
+    - q_values[action_idx]
+)
+```
+
+---
+
+## Training Loop
+
+학습 단계.
+
+```text
+reset
+
+↓
+
+state
+
+↓
+
+action
+
+↓
+
+step
+
+↓
+
+reward
+
+↓
+
+update_q
+
+↓
+
+next state
+```
+
+반복.
+
+---
+
+## Evaluation Loop
+
+평가 단계.
+
+차이점
+
+```text
+epsilon = 0
+
+update_q 없음
+```
+
+즉
+
+Q를 수정하지 않고
+
+학습된 정책만 사용.
+
+---
+
+## 실험 결과
+
+Q-Table이 실제로 학습됨.
+
+예시
+
+```python
+Q[(0,1)]
+
+=
+
+[0.53, 0.89, 1.88]
+```
+
+Agent는
+
+```text
+action = 1
+```
+
+을 선택.
+
+---
+
+## 중요한 발견
+
+done을 제거하고 계속 진행했을 때
+
+Position이 크게 음수 방향으로 발산.
+
+원인 분석:
+
+학습은
+
+```text
+x ≈ 0 ~ 10
+```
+
+범위에서만 수행됨.
+
+하지만 평가 시
+
+```text
+x = 20
+x = 30
+```
+
+등 처음 보는 상태가 등장.
+
+이 상태들은
+
+```python
+[0,0,0]
+```
+
+으로 초기화되어 있었음.
+
+결과적으로
+
+```text
+학습 범위 밖 상태
+=
+처음 보는 상태
+```
+
+가 되었고 이상 행동 발생.
+
+---
+
+## Q-Table의 한계 발견
+
+Q-Table은
+
+```text
+학습한 상태만 안다.
+```
+
+즉,
+
+```text
+Seen State
+→ 가능
+
+Unseen State
+→ 불가능
+```
+
+---
+
+## Project 09 결론
+
+처음으로
+
+```text
+Reward
+
+↓
+
+Q Value
+
+↓
+
+Policy
+
+↓
+
+Action
+```
+
+이 연결되는 강화학습 시스템 구현 성공.
+
+또한 Q-Table의 일반화 불가능 문제를 직접 관찰함.
+
+이 문제를 해결하기 위해 다음 단계에서 Neural Network 기반 방법(DQN)이 등장한다.
