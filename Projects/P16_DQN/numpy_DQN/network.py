@@ -24,9 +24,9 @@ class MLP:
         return (Z > 0).astype(float)
     
     def back_propagation(self, dQ):
-        dW2 = self.A1.T @ dQ
-        db2 = np.sum(dQ, axis=0)
-        dA1 = dQ @ self.W2.T
-        dZ1 = dA1 * self.ReLu_derivative(self.Z1)
-        dW1 = self.X.T @ dZ1
-        db1 = np.sum(dZ1, axis=0)
+        self.dW2 = self.A1.T @ dQ
+        self.db2 = np.sum(dQ, axis=0)
+        self.dA1 = dQ @ self.W2.T
+        self.dZ1 = self.dA1 * self.ReLu_derivative(self.Z1)
+        self.dW1 = self.X.T @ self.dZ1
+        self.db1 = np.sum(self.dZ1, axis=0)
