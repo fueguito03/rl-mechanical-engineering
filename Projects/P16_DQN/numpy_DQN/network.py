@@ -14,8 +14,19 @@ class MLP:
         return A
 
     def forward(self, X):
-        Z1 = X @ self.W1 + self.b1
-        A1 = self.ReLu(Z1)
-        Z2 = A1 @ self.W2 + self.b2
-        return Z2
+        self.X = X
+        self.Z1 = self.X @ self.W1 + self.b1
+        self.A1 = self.ReLu(self.Z1)
+        self.Z2 = self.A1 @ self.W2 + self.b2
+        return self.Z2
     
+    def ReLu_derivative(self, Z):
+        return (Z > 0).astype(float)
+    
+    def back_propagation(self, dQ):
+        dW2 = self.A1.T @ dQ
+        db2 = np.sum(dQ, axis=0)
+        dA1 = dQ @ self.W2.T
+        dZ1 = dA1 * self.ReLu_derivative(self.Z1)
+        dW1 = self.X.T @ dZ1
+        db1 = np.sum(dZ1, axis=0)
