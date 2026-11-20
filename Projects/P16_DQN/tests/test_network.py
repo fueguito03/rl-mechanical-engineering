@@ -28,4 +28,24 @@ def test_forward_propagation():
 
 
 def test_back_propagation():
-    pass
+    model = MLP(input_dim=2, hidden_dim=2, output_dim=2)
+    X = np.array([[1, 2]])
+    model.W1 = np.array([
+        [1, -1], 
+        [2, 1]
+        ])
+    model.W2 = np.array([
+        [1, 2],
+        [-1, 3]
+    ])
+
+    Q = model.forward(X)
+    model.back_propagation(dQ=np.array([[4, 6]]))
+
+    assert np.allclose(model.dW2, np.array([[20, 30], [4, 6]]))
+    assert np.allclose(model.db2, np.array([4, 6]))
+    assert np.allclose(model.dW1, np.array([[16, 14], [32, 28]]))
+    assert np.allclose(model.db1, np.array([16, 14]))
+
+    assert np.allclose(Q, np.array([[4, 13]]))
+    
