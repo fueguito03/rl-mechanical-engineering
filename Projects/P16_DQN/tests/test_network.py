@@ -66,19 +66,27 @@ def test_gradient_checking():
 
     h = 1e-5
 
-    for idx in np.ndindex(model.W1.shape):
-        original_weight = model.W1[idx]
+    params_and_grads = [
+        (model.W1, model.dW1),
+        (model.W2, model.dW2),
+        (model.b1, model.db1),
+        (model.b2, model.db2)
+    ]
 
-        model.W1[idx] = original_weight + h
-        Q = model.forward(X)
-        L_plus = np.sum((Q - Y)**2)
+    for param, grad in params_and_grads:
+        for idx in np.ndindex(param.shape):
+            original_weight = param[idx]
 
-        model.W1[idx] = original_weight - h
-        Q = model.forward(X)
-        L_minus = np.sum((Q - Y)**2)
+            param[idx] = original_weight + h
+            Q = model.forward(X)
+            L_plus = np.sum((Q - Y)**2)
 
-        model.W1[idx] = original_weight
+            param[idx] = original_weight - h
+            Q = model.forward(X)
+            L_minus = np.sum((Q - Y)**2)
 
-        dL_numerical_gradient = (L_plus - L_minus) / (2 * h)
+            param[idx] = original_weight
 
-        assert np.allclose(model.dW1[idx] , dL_numerical_gradient)
+            dL_numerical_gradient = (L_plus - L_minus) / (2 * h)
+
+            assert np.allclose(grad[idx] , dL_numerical_gradient)
