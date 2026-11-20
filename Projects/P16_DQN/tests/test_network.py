@@ -65,18 +65,20 @@ def test_gradient_checking():
     model.back_propagation(dQ=2 * (Q - Y))
 
     h = 1e-5
-    original_weight = model.W1[0, 0]
 
-    model.W1[0,0] = original_weight + h
-    Q = model.forward(X)
-    L_plus = np.sum((Q - Y)**2)
+    for idx in np.ndindex(model.W1.shape):
+        original_weight = model.W1[idx]
 
-    model.W1[0,0] = original_weight - h
-    Q = model.forward(X)
-    L_minus = np.sum((Q - Y)**2)
+        model.W1[idx] = original_weight + h
+        Q = model.forward(X)
+        L_plus = np.sum((Q - Y)**2)
 
-    model.W1[0,0] = original_weight
+        model.W1[idx] = original_weight - h
+        Q = model.forward(X)
+        L_minus = np.sum((Q - Y)**2)
 
-    dL_numerical_gradient = (L_plus - L_minus) / (2 * h)
+        model.W1[idx] = original_weight
 
-    assert np.allclose(model.dW1[0,0] , dL_numerical_gradient)
+        dL_numerical_gradient = (L_plus - L_minus) / (2 * h)
+
+        assert np.allclose(model.dW1[idx] , dL_numerical_gradient)
