@@ -18,7 +18,7 @@ class ReplayBuffer:
             raise ValueError("Not enough transitions in buffer")
         
         if batch_size < 1:
-            raise ValueError("Batch size is below 0")
+            raise ValueError("Batch size must be positive")
 
         indices = self.rng.choice(
             len(self.buffer),
